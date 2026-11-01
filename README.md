@@ -18,6 +18,8 @@ When updating, delete any old `BFRates.luac` next to the script so the radio doe
 
 ## Main screen
 
+- The title bar shows the script version and build date/time, e.g. `BF Rates v4 01.11.26 12:44`.
+- Right after opening, the status line shows the cfg file result once: `cfg ok`, `cfg written` (created or upgraded) or `cfg write FAILED`.
 - 6 slots, each shown as name, rates type and full-stick roll/pitch/yaw in deg/s.
 - `*` marks the slot that matches the FC. `~` means the rates match but the throttle settings differ.
 - The bottom line shows the FC's current rates and the active rate profile (`rp1`…).
@@ -46,6 +48,7 @@ The slot is written to the FC's **active** rate profile. Rate limits and any oth
 Slots are saved to `/SCRIPTS/BFRates.cfg` on the SD card when you leave **Edit** with RTN, or after **Save FC here**. The file is created with the defaults the first time the script opens, and an older file without throttle lines is upgraded on open. Plain text, raw CLI values:
 
 ```
+# BF Rates v4 (01.11.26 12:44) saved 2026-11-01 12:50
 s1_name=Default
 s1_t=3
 s1_r=7,67,0
@@ -54,7 +57,7 @@ s1_y=7,67,0
 s1_th=50,0,0,100
 ```
 
-`sN_t` is the rates type (0 BF, 1 RACEFLIGHT, 2 KISS, 3 ACTUAL, 4 QUICK). Axis lines are `rc_rate,srate,expo`. `sN_th` is `thr_mid,thr_expo,limit_type,limit_percent`.
+The first line records the script version, its build date/time and when the file was saved (radio clock). `sN_t` is the rates type (0 BF, 1 RACEFLIGHT, 2 KISS, 3 ACTUAL, 4 QUICK). Axis lines are `rc_rate,srate,expo`. `sN_th` is `thr_mid,thr_expo,limit_type,limit_percent`.
 
 ## Link status
 

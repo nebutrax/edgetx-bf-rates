@@ -66,7 +66,15 @@ local TX_CHUNK = 8     -- MSP bytes per CRSF frame (incl. status byte)
 local TIMEOUT  = 250   -- 2.5 s per try (getTime() = 10 ms ticks)
 local RETRIES  = 5     -- the first read retries until you press EXIT
 local ROWS = 7
+local VER = "v4"
+local BUILD = "01.11.26 12:44"    -- build date/time, shown in the title bar
 local READY = "ENTER = menu"
+local note = nil                  -- one-shot status after opening (cfg file result)
+local function readyMsg()
+  local m = note or READY
+  note = nil
+  return m
+end
 local MENU = { "Apply to FC", "Edit", "Save FC here" }
 
 local page, sel, msel, state, msg = "main", 1, 1, "read", "Reading FC..."
@@ -202,7 +210,12 @@ local function loadCfg()                      -- returns true if the file is mis
 end
 
 local function saveCfg()
-  local out = ""
+  local out = "# BF Rates " .. VER .. " (" .. BUILD .. ")"
+  local dt = getDateTime and getDateTime()     -- radio clock
+  if dt and dt.year then
+    out = out .. string.format(" saved %04d-%02d-%02d %02d:%02d", dt.year, dt.mon, dt.day, dt.hour, dt.min)
+  end
+  out = out .. "\n"
   for i, s in ipairs(SLOTS) do
     out = out .. "s" .. i .. "_name=" .. s.name .. "\n" .. "s" .. i .. "_t=" .. s.t .. "\n"
     for _, ax in ipairs(AXES) do
@@ -328,7 +341,7 @@ local function onReply(cmd, d, err)
       state, msg = "write", "Writing..."
       send(MSP_SET_RC_TUNING, payload(target), true)
     else
-      state, msg = "idle", READY
+      state, msg = "idle", readyMsg()
     end
     return
   end
@@ -355,7 +368,7 @@ local function onReply(cmd, d, err)
         send(MSP_STATUS_EX, {}, false)
         return
       end
-      state, msg = "idle", READY
+      state, msg = "idle", readyMsg()
     end
   elseif cmd == MSP_SET_RC_TUNING then
     state, msg = "save", "Saving EEPROM..."
@@ -508,7 +521,7 @@ end
 ---------------------------------------------------------------- main page
 local function drawMain()
   lcd.clear()
-  lcd.drawText(1, 0, "BF Rates   R/P/Y deg/s", SMLSIZE + INVERS)
+  lcd.drawText(1, 0, "BF Rates " .. VER .. " " .. BUILD, SMLSIZE + INVERS)
   for i, s in ipairs(SLOTS) do
     local y = 8 + (i - 1) * 7
     lcd.drawText(2, y, s.name, SMLSIZE + ((i == sel) and INVERS or 0))
@@ -544,7 +557,11 @@ local function drawMenu()
 end
 
 local function init()
-  if loadCfg() then saveCfg() end              -- create / upgrade BFRates.cfg on open
+  if loadCfg() then                            -- create / upgrade BFRates.cfg on open
+    note = saveCfg() and "cfg written" or "cfg write FAILED"
+  else
+    note = "cfg ok"
+  end
   send(MSP_RC_TUNING, {}, false)
 end
 
@@ -556,7 +573,7 @@ local function run(event)
       onReply(c, d, e)
     elseif getTime() - lastSend > TIMEOUT then
       if tries < RETRIES or state == "read" then resend()
-      elseif state == "stat" then state, msg = "idle", READY   -- status is optional on open
+      elseif state == "stat" then state, msg = "idle", readyMsg()   -- status is optional on open
       else state, msg = "idle", "No reply - telem?" end
     end
   end
