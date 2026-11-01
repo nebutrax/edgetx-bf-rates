@@ -43,7 +43,7 @@ The slot is written to the FC's **active** rate profile. Rate limits and any oth
 
 ## Storage
 
-Slots are saved to `/SCRIPTS/BFRates.cfg` on the SD card when you leave **Edit** with RTN, or after **Save FC here**. Plain text, raw CLI values:
+Slots are saved to `/SCRIPTS/BFRates.cfg` on the SD card when you leave **Edit** with RTN, or after **Save FC here**. The file is created with the defaults the first time the script opens, and an older file without throttle lines is upgraded on open. Plain text, raw CLI values:
 
 ```
 s1_name=Default

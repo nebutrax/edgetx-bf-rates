@@ -166,11 +166,13 @@ local function fmt(t, f, x)                    -- raw value -> Configurator disp
 end
 
 ---------------------------------------------------------------- settings file
-local function loadCfg()
+local function loadCfg()                      -- returns true if the file is missing or incomplete
   local f = io.open(CFG, "r")
-  if not f then return end
+  if not f then return true end
   local data = io.read(f, 2048) or ""
   io.close(f)
+  local seen = 0
+  for _ in string.gmatch(data, "s%d_th=") do seen = seen + 1 end
   for k, val in string.gmatch(data, "([%w_]+)=([^\r\n]*)") do
     local n, fld = string.match(k, "^s(%d)_(%a+)$")
     local s = n and SLOTS[tonumber(n)]
@@ -196,6 +198,7 @@ local function loadCfg()
     end
     for i = 1, 4 do s.th[i] = clamp(s.th[i], TH_LO[i], TH_HI[i]) end
   end
+  return seen < #SLOTS                         -- older file without throttle lines
 end
 
 local function saveCfg()
@@ -541,7 +544,7 @@ local function drawMenu()
 end
 
 local function init()
-  loadCfg()
+  if loadCfg() then saveCfg() end              -- create / upgrade BFRates.cfg on open
   send(MSP_RC_TUNING, {}, false)
 end
 
